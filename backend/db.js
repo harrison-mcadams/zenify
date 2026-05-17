@@ -123,7 +123,8 @@ function completeTask(id) {
 
   if (task.type === 'recurring' && task.recurrence === 'on-completion') {
     // On-completion: log points, keep task uncompleted for reuse
-    // Don't mark completed at all
+    // Don't mark completed at all, but update last completed time
+    run('UPDATE tasks SET completed_at = ? WHERE id = ?', [now, id]);
   } else {
     run('UPDATE tasks SET completed = 1, completed_at = ? WHERE id = ?', [now, id]);
   }
@@ -147,33 +148,19 @@ function getPoints() {
 
 function resetDueRecurringTasks() {
   const tasks = queryAll(
-    "SELECT * FROM tasks WHERE type = 'recurring' AND completed = 1 AND completed_at IS NOT NULL"
+    "SELECT * FROM tasks WHERE completed = 1 AND completed_at IS NOT NULL"
   );
   const now = new Date();
   let resetCount = 0;
 
   for (const task of tasks) {
-    if (!task.completed_at || task.recurrence === 'on-completion') continue;
-
     const completedAt = new Date(task.completed_at);
-    let shouldReset = false;
-
-    switch (task.recurrence) {
-      case 'daily':
-        shouldReset = now.toDateString() !== completedAt.toDateString();
-        break;
-      case 'weekly': {
-        const msInWeek = 7 * 24 * 60 * 60 * 1000;
-        shouldReset = (now - completedAt) >= msInWeek;
-        break;
-      }
-      case 'monthly':
-        shouldReset = now.getMonth() !== completedAt.getMonth() || now.getFullYear() !== completedAt.getFullYear();
-        break;
-    }
+    // Stroke of midnight: reset if calendar date has changed
+    const shouldReset = now.toDateString() !== completedAt.toDateString();
 
     if (shouldReset) {
-      run('UPDATE tasks SET completed = 0, completed_at = NULL WHERE id = ?', [task.id]);
+      // Mark as uncompleted, but PRESERVE completed_at timestamp for urgency and metadata tracking
+      run('UPDATE tasks SET completed = 0 WHERE id = ?', [task.id]);
       resetCount++;
     }
   }

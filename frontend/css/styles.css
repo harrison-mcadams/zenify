@@ -1,26 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 
 :root {
-  --bg: #000000;
-  --bg-card: #121212;
-  --bg-modal: rgba(0, 0, 0, 0.85);
-  --text-primary: #FFFFFF;
-  --text-secondary: #A3A3A3;
-  --text-muted: #525252;
-  --border-color: #262626;
+  /* Yosemite National Park Palette (Twilight Granite & Merced River & Pine Forest & Sunset Ochre) */
+  --bg: #1B2022;          /* Deep cool twilight valley granite shadow */
+  --bg-card: #121516;     /* Deep mountain shadow */
+  --bg-modal: rgba(27, 32, 34, 0.9);
+  --text-primary: #F4F6F7;  /* High Sierra light granite/snow white */
+  --text-secondary: #9EAEB8; /* Misty blue-gray river mist */
+  --text-muted: #5E6C75;    /* Granite rock gray */
+  --border-color: #2D353A;  /* Muted rock fracture border */
 
-  /* Mechanical/Reflective Accents */
-  --wellness: #4ADE80; /* Reflective Green */
-  --wellness-light: #064E3B;
-  --wellness-dark: #34D399;
-  --chores: #FACC15; /* Reflective Yellow */
-  --chores-light: #78350F;
-  --chores-dark: #FBBF24;
-  --accent: #FFFFFF;
+  /* Category accents */
+  --wellness: #3E6B5C;      /* Yosemite Sequoia & Pine Needle Green */
+  --wellness-light: #2E5448;
+  --wellness-dark: #4F806E;
+  --chores: #C87A53;        /* Half Dome sunset glowing ochre / clay */
+  --chores-light: #A25B36;
+  --chores-dark: #DFA07E;
+  --accent: #5C8FA6;        /* Merced River cool slate blue */
 
-  --shadow-sm: 0 0 0 1px #262626;
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.8);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.95);
+  --shadow-sm: 0 0 0 1px #2D353A;
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.8);
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -83,8 +84,8 @@ body {
   transition: all var(--transition);
 }
 .btn-cashout:hover {
-  background: #FFFFFF; color: #000000; border-color: #FFFFFF;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  background: #EAE6DF; color: #000000; border-color: #EAE6DF;
+  box-shadow: 0 0 8px rgba(234, 230, 223, 0.2);
 }
 
 /* Connection Status */
@@ -100,7 +101,7 @@ body {
   transition: all var(--transition); background: var(--bg-card); color: var(--text-secondary);
 }
 .tab:hover { border-color: var(--text-secondary); }
-.tab--active { background: #FFFFFF !important; color: #000000 !important; border-color: #FFFFFF !important; }
+.tab--active { background: #EAE6DF !important; color: #000000 !important; border-color: #EAE6DF !important; }
 
 /* Sort Bar */
 .sort-bar {
@@ -134,9 +135,9 @@ body {
   color: var(--text-primary);
 }
 .sort-btn--active {
-  background: #FFFFFF !important;
+  background: #EAE6DF !important;
   color: #000000 !important;
-  border-color: #FFFFFF !important;
+  border-color: #EAE6DF !important;
 }
 
 /* Suggestions Header */
@@ -169,9 +170,9 @@ body {
   transition: all var(--transition);
 }
 .btn-refresh-suggestions:hover {
-  background: #FFFFFF;
+  background: #EAE6DF;
   color: #000000;
-  border-color: #FFFFFF;
+  border-color: #EAE6DF;
 }
 
 /* Task List */
@@ -185,7 +186,7 @@ body {
   transition: all var(--transition);
 }
 .btn-toggle-completed:hover {
-  background: #FFFFFF; color: #000000; border-color: #FFFFFF;
+  background: #EAE6DF; color: #000000; border-color: #EAE6DF;
 }
 
 /* Task Card - Mechanical Flip Flap Panel look (White background, Black text) */
@@ -213,16 +214,20 @@ body {
   perspective: 1000px;
 }
 .task-card__check:hover { border-color: #000000; }
-.task-card--completed .task-card__check {
+.task-card--completed.task-card--wellness .task-card__check {
   transform: rotateY(180deg);
-  background: #000000; border-color: #000000;
+  background: var(--wellness); border-color: var(--wellness);
+}
+.task-card--completed.task-card--chores .task-card__check {
+  transform: rotateY(180deg);
+  background: var(--chores); border-color: var(--chores);
 }
 .task-card__check-icon { font-size: 12px; font-weight: 800; color: #FFFFFF; opacity: 0; transition: opacity var(--transition); }
 .task-card--completed .task-card__check-icon { opacity: 1; }
 
 .task-card__info { flex: 1; min-width: 0; }
 .task-card__title { font-size: 14px; font-weight: 700; color: #000000; margin-bottom: 2px; }
-.task-card__meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #525252; }
+.task-card__meta { display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: #525252; margin-top: 4px; }
 .task-card__recurrence { display: inline-flex; align-items: center; gap: 3px; }
 
 /* Points display on card (Inverted for White Card) */
@@ -230,8 +235,8 @@ body {
   font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: var(--radius-sm); flex-shrink: 0;
   border: 1px solid #E5E5E5; background: #F5F5F5;
 }
-.task-card--wellness .task-card__points { color: #15803D; }
-.task-card--chores .task-card__points { color: #B45309; }
+.task-card--wellness .task-card__points { color: var(--wellness-light); }
+.task-card--chores .task-card__points { color: var(--chores-light); }
 
 /* Task actions visible on hover */
 .task-card__actions { display: flex; gap: 4px; opacity: 0; transition: opacity var(--transition); }

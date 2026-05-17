@@ -8,8 +8,9 @@ let state = {
   editingTaskId: null,
   connected: false,
   showCompleted: false,
-  sortBy: 'frequency',
+  sortBy: 'priority',
   surfacedIndices: { wellness: 0, chores: 0 },
+  currentSuggestions: { wellness: null, chores: null },
 };
 
 // ========== DOM Refs ==========
@@ -136,7 +137,9 @@ function getRecurrenceRank(recurrence) {
 
 function sortTasks(tasksList) {
   const listCopy = [...tasksList];
-  if (state.sortBy === 'frequency') {
+  if (state.sortBy === 'priority') {
+    listCopy.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
+  } else if (state.sortBy === 'frequency') {
     listCopy.sort((a, b) => {
       const rankA = getRecurrenceRank(a.recurrence);
       const rankB = getRecurrenceRank(b.recurrence);
@@ -159,16 +162,44 @@ function sortTasks(tasksList) {
 
 function setSort(type) {
   state.sortBy = type;
+  const btnPrio = document.getElementById('sort-btn-priority');
   const btnFreq = document.getElementById('sort-btn-frequency');
   const btnRec = document.getElementById('sort-btn-recency');
+  if (btnPrio) btnPrio.classList.toggle('sort-btn--active', type === 'priority');
   if (btnFreq) btnFreq.classList.toggle('sort-btn--active', type === 'frequency');
   if (btnRec) btnRec.classList.toggle('sort-btn--active', type === 'recency');
   renderTasks();
 }
 
+function selectNewSuggestion(category) {
+  const active = state.tasks.filter(t => t.category === category && !t.completed);
+  if (active.length === 0) return null;
+
+  // Sort by Urgency Score DESC
+  active.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
+
+  if (active.length === 1) {
+    return active[0];
+  }
+
+  // Select from the top 3 most urgent tasks
+  const poolSize = Math.min(3, active.length);
+  const pool = active.slice(0, poolSize);
+
+  // Exclude currently displayed suggestion if possible to ensure we cycle/switch
+  const currentId = state.currentSuggestions[category]?.id;
+  const candidates = pool.filter(t => t.id !== currentId);
+
+  if (candidates.length > 0) {
+    const randIdx = Math.floor(Math.random() * candidates.length);
+    return candidates[randIdx];
+  }
+  return pool[0];
+}
+
 function refreshAllSuggestions() {
-  state.surfacedIndices.wellness++;
-  state.surfacedIndices.chores++;
+  state.currentSuggestions.wellness = selectNewSuggestion('wellness');
+  state.currentSuggestions.chores = selectNewSuggestion('chores');
   renderTasks();
   showToast("Refreshed suggestions! 🔄");
 }
@@ -187,25 +218,25 @@ function renderTasks() {
   if (state.activeCategory === 'all') {
     if (sortBar) sortBar.style.display = 'none';
 
-    // "All" tab: surface exactly one Wellness task and one Chores task
-    const activeWellness = state.tasks.filter(t => t.category === 'wellness' && !t.completed);
-    const activeChores = state.tasks.filter(t => t.category === 'chores' && !t.completed);
-
-    // Sort by Urgency Ratio DESC
-    activeWellness.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
-    activeChores.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
-
-    let wellnessSuggestion = null;
-    if (activeWellness.length > 0) {
-      const idx = state.surfacedIndices.wellness % activeWellness.length;
-      wellnessSuggestion = activeWellness[idx];
+    // Verify or select suggestions
+    const wellnessId = state.currentSuggestions.wellness?.id;
+    const stillActiveWellness = state.tasks.find(t => t.id === wellnessId && !t.completed);
+    if (!stillActiveWellness) {
+      state.currentSuggestions.wellness = selectNewSuggestion('wellness');
+    } else {
+      state.currentSuggestions.wellness = stillActiveWellness;
     }
 
-    let choresSuggestion = null;
-    if (activeChores.length > 0) {
-      const idx = state.surfacedIndices.chores % activeChores.length;
-      choresSuggestion = activeChores[idx];
+    const choresId = state.currentSuggestions.chores?.id;
+    const stillActiveChores = state.tasks.find(t => t.id === choresId && !t.completed);
+    if (!stillActiveChores) {
+      state.currentSuggestions.chores = selectNewSuggestion('chores');
+    } else {
+      state.currentSuggestions.chores = stillActiveChores;
     }
+
+    const wellnessSuggestion = state.currentSuggestions.wellness;
+    const choresSuggestion = state.currentSuggestions.chores;
 
     let html = `
       <div class="suggestions-header">
@@ -282,6 +313,30 @@ function renderTasks() {
   }
 }
 
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return 'Never';
+  const completedDate = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - completedDate;
+
+  if (diffMs < 0) return 'Just now';
+
+  const diffSecs = Math.floor(diffMs / 1000);
+  if (diffSecs < 60) return 'Just now';
+
+  const diffMins = Math.floor(diffSecs / 60);
+  if (diffMins < 60) return `${diffMins}m ago`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return completedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 function renderTaskCard(task) {
   const isCompleted = task.completed;
   const catClass = `task-card--${task.category}`;
@@ -295,6 +350,9 @@ function renderTaskCard(task) {
   } else {
     metaHtml = `<span>One-off</span>`;
   }
+
+  const lastCompletedStr = formatRelativeTime(task.completed_at);
+  metaHtml += ` <span class="task-card__last-completed">Last completed: ${lastCompletedStr}</span>`;
 
   const actionBtn = isCompleted
     ? `<button class="task-card__action-btn task-card__action-btn--restore" onclick="window.zenify.toggleComplete('${task.id}')" title="Restore/Undo task">↺</button>`
