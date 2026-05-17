@@ -35,6 +35,13 @@
       <button class="tab" data-category="chores" id="tab-chores">🧹 Chores</button>
     </div>
 
+    <!-- Sort Bar -->
+    <div class="sort-bar" id="sort-bar" style="display: none;">
+      <span class="sort-label">Sort:</span>
+      <button class="sort-btn sort-btn--active" id="sort-btn-frequency" onclick="window.zenify.setSort('frequency')">Frequency</button>
+      <button class="sort-btn" id="sort-btn-recency" onclick="window.zenify.setSort('recency')">Last Completed</button>
+    </div>
+
     <!-- Task List -->
     <div class="task-list" id="task-list"></div>
 

@@ -183,10 +183,19 @@ function resetDueRecurringTasks() {
 
 function seedIfEmpty() {
   const row = queryOne('SELECT COUNT(*) as c FROM tasks');
-  if (row && row.c > 0) return;
+  if (row && row.c > 0) {
+    // If already seeded, make sure we update 'Go for a run' to daily and insert 'Stretch' daily wellness task if not present
+    run("UPDATE tasks SET recurrence = 'daily', type = 'recurring' WHERE title = 'Go for a run'");
+    const stretchExists = queryOne("SELECT COUNT(*) as c FROM tasks WHERE title = 'Stretch'");
+    if (stretchExists && stretchExists.c === 0) {
+      createTask({ title: 'Stretch', points: 1, category: 'wellness', type: 'recurring', recurrence: 'daily' });
+    }
+    return;
+  }
 
   const seeds = [
-    { title: 'Go for a run', points: 5, category: 'wellness', type: 'recurring', recurrence: 'on-completion' },
+    { title: 'Go for a run', points: 5, category: 'wellness', type: 'recurring', recurrence: 'daily' },
+    { title: 'Stretch', points: 1, category: 'wellness', type: 'recurring', recurrence: 'daily' },
     { title: 'Laundry', points: 5, category: 'chores', type: 'recurring', recurrence: 'weekly' },
     { title: 'Do the dishes', points: 1, category: 'chores', type: 'recurring', recurrence: 'daily' },
     { title: 'Clean litterboxes', points: 1, category: 'chores', type: 'recurring', recurrence: 'daily' },
@@ -200,6 +209,7 @@ function seedIfEmpty() {
 
 function resetPoints() {
   run('DELETE FROM points_log');
+  run('UPDATE tasks SET completed = 0, completed_at = NULL');
 }
 
 module.exports = {

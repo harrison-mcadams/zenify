@@ -8,6 +8,8 @@ let state = {
   editingTaskId: null,
   connected: false,
   showCompleted: false,
+  sortBy: 'frequency',
+  surfacedIndices: { wellness: 0, chores: 0 },
 };
 
 // ========== DOM Refs ==========
@@ -101,6 +103,76 @@ function rollDigit(el, targetValue) {
   activeRollers.set(el, intervalId);
 }
 
+function getRecurrenceHours(recurrence) {
+  switch (recurrence) {
+    case 'daily': return 24;
+    case 'weekly': return 168;
+    case 'monthly': return 720;
+    case 'on-completion': return 336; // 14 days
+    default: return 336; // One-off: 14 days
+  }
+}
+
+function calculateUrgencyScore(task) {
+  if (!task.completed_at) {
+    const freqWeight = getRecurrenceHours(task.recurrence);
+    return 999999 - freqWeight;
+  }
+  const lastCompleted = new Date(task.completed_at);
+  const elapsedHours = (new Date() - lastCompleted) / (1000 * 60 * 60);
+  const intervalHours = getRecurrenceHours(task.recurrence);
+  return elapsedHours / intervalHours;
+}
+
+function getRecurrenceRank(recurrence) {
+  switch (recurrence) {
+    case 'daily': return 4;
+    case 'weekly': return 3;
+    case 'monthly': return 2;
+    case 'on-completion': return 1;
+    default: return 0;
+  }
+}
+
+function sortTasks(tasksList) {
+  const listCopy = [...tasksList];
+  if (state.sortBy === 'frequency') {
+    listCopy.sort((a, b) => {
+      const rankA = getRecurrenceRank(a.recurrence);
+      const rankB = getRecurrenceRank(b.recurrence);
+      if (rankB !== rankA) return rankB - rankA;
+      return a.title.localeCompare(b.title);
+    });
+  } else {
+    // Sort by Last Completed
+    listCopy.sort((a, b) => {
+      if (a.completed && b.completed) {
+        return new Date(b.completed_at) - new Date(a.completed_at);
+      }
+      if (a.completed) return -1;
+      if (b.completed) return 1;
+      return a.title.localeCompare(b.title);
+    });
+  }
+  return listCopy;
+}
+
+function setSort(type) {
+  state.sortBy = type;
+  const btnFreq = document.getElementById('sort-btn-frequency');
+  const btnRec = document.getElementById('sort-btn-recency');
+  if (btnFreq) btnFreq.classList.toggle('sort-btn--active', type === 'frequency');
+  if (btnRec) btnRec.classList.toggle('sort-btn--active', type === 'recency');
+  renderTasks();
+}
+
+function refreshAllSuggestions() {
+  state.surfacedIndices.wellness++;
+  state.surfacedIndices.chores++;
+  renderTasks();
+  showToast("Refreshed suggestions! 🔄");
+}
+
 // ========== Rendering ==========
 function renderPoints() {
   const totalStr = String(state.points.total || 0).padStart(3, '0');
@@ -110,41 +182,104 @@ function renderPoints() {
 }
 
 function renderTasks() {
-  const filtered = state.activeCategory === 'all'
-    ? state.tasks
-    : state.tasks.filter(t => t.category === state.activeCategory);
+  const sortBar = document.getElementById('sort-bar');
 
-  const active = filtered.filter(t => !t.completed);
-  const completed = filtered.filter(t => t.completed);
+  if (state.activeCategory === 'all') {
+    if (sortBar) sortBar.style.display = 'none';
 
-  if (filtered.length === 0) {
-    taskListEl.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state__icon">📋</div>
-        <div class="empty-state__text">No tasks yet. Tap + to add one!</div>
-      </div>`;
-    return;
-  }
+    // "All" tab: surface exactly one Wellness task and one Chores task
+    const activeWellness = state.tasks.filter(t => t.category === 'wellness' && !t.completed);
+    const activeChores = state.tasks.filter(t => t.category === 'chores' && !t.completed);
 
-  let html = '';
+    // Sort by Urgency Ratio DESC
+    activeWellness.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
+    activeChores.sort((a, b) => calculateUrgencyScore(b) - calculateUrgencyScore(a));
 
-  if (active.length > 0) {
-    html += `<div class="task-section-label">To Do</div>`;
-    html += active.map(renderTaskCard).join('');
-  }
-
-  if (completed.length > 0) {
-    html += `
-      <div class="task-section-header">
-        <span class="task-section-label">Completed</span>
-        <button class="btn-toggle-completed" onclick="window.zenify.toggleShowCompleted()">${state.showCompleted ? 'HIDE' : 'SHOW'}</button>
-      </div>`;
-    if (state.showCompleted) {
-      html += completed.map(renderTaskCard).join('');
+    let wellnessSuggestion = null;
+    if (activeWellness.length > 0) {
+      const idx = state.surfacedIndices.wellness % activeWellness.length;
+      wellnessSuggestion = activeWellness[idx];
     }
-  }
 
-  taskListEl.innerHTML = html;
+    let choresSuggestion = null;
+    if (activeChores.length > 0) {
+      const idx = state.surfacedIndices.chores % activeChores.length;
+      choresSuggestion = activeChores[idx];
+    }
+
+    let html = `
+      <div class="suggestions-header">
+        <span class="suggestions-title">Today's Focus</span>
+        <button class="btn-refresh-suggestions" onclick="window.zenify.refreshAllSuggestions()">REFRESH SUGGESTIONS</button>
+      </div>`;
+
+    if (wellnessSuggestion) {
+      html += renderTaskCard(wellnessSuggestion);
+    }
+    if (choresSuggestion) {
+      html += renderTaskCard(choresSuggestion);
+    }
+
+    if (!wellnessSuggestion && !choresSuggestion) {
+      html += `
+        <div class="empty-state">
+          <div class="empty-state__icon">🎉</div>
+          <div class="empty-state__text">All caught up! Tap Chores or Wellness to see all, or add a new task!</div>
+        </div>`;
+    }
+
+    // Still display all completed tasks on All tab
+    const completed = state.tasks.filter(t => t.completed);
+    if (completed.length > 0) {
+      html += `
+        <div class="task-section-header">
+          <span class="task-section-label">Completed</span>
+          <button class="btn-toggle-completed" onclick="window.zenify.toggleShowCompleted()">${state.showCompleted ? 'HIDE' : 'SHOW'}</button>
+        </div>`;
+      if (state.showCompleted) {
+        html += completed.map(renderTaskCard).join('');
+      }
+    }
+
+    taskListEl.innerHTML = html;
+  } else {
+    // Individual tabs: show whole sorted list of tasks
+    if (sortBar) sortBar.style.display = 'flex';
+
+    const categoryTasks = state.tasks.filter(t => t.category === state.activeCategory);
+    if (categoryTasks.length === 0) {
+      taskListEl.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <div class="empty-state__text">No tasks yet. Tap + to add one!</div>
+        </div>`;
+      return;
+    }
+
+    const sortedTasks = sortTasks(categoryTasks);
+    const active = sortedTasks.filter(t => !t.completed);
+    const completed = sortedTasks.filter(t => t.completed);
+
+    let html = '';
+
+    if (active.length > 0) {
+      html += `<div class="task-section-label">To Do</div>`;
+      html += active.map(renderTaskCard).join('');
+    }
+
+    if (completed.length > 0) {
+      html += `
+        <div class="task-section-header">
+          <span class="task-section-label">Completed</span>
+          <button class="btn-toggle-completed" onclick="window.zenify.toggleShowCompleted()">${state.showCompleted ? 'HIDE' : 'SHOW'}</button>
+        </div>`;
+      if (state.showCompleted) {
+        html += completed.map(renderTaskCard).join('');
+      }
+    }
+
+    taskListEl.innerHTML = html;
+  }
 }
 
 function renderTaskCard(task) {
@@ -410,7 +545,7 @@ function setupEventListeners() {
 }
 
 // Expose actions to inline handlers
-window.zenify = { toggleComplete, removeTask, editTask, cashOut, toggleShowCompleted };
+window.zenify = { toggleComplete, removeTask, editTask, cashOut, toggleShowCompleted, setSort, refreshAllSuggestions };
 
 // Go
 init();
