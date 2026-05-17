@@ -71,6 +71,11 @@ app.get('/api/points', (req, res) => {
   res.json(points);
 });
 
+app.post('/api/points/reset', (req, res) => {
+  db.resetPoints();
+  res.json({ success: true });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

@@ -15,19 +15,10 @@
     <header class="header">
 
       <div class="points-display" id="points-display">
-        <div class="points-total">
-          <div class="points-total__label">Total Points</div>
-          <div class="points-total__value" id="total-points">0</div>
-        </div>
-        <div class="points-divider"></div>
-        <div class="points-category">
-          <div class="points-category__value points-category__value--wellness" id="wellness-points">0</div>
-          <div class="points-category__label">Wellness</div>
-        </div>
-        <div class="points-divider"></div>
-        <div class="points-category">
-          <div class="points-category__value points-category__value--chores" id="chores-points">0</div>
-          <div class="points-category__label">Chores</div>
+        <div class="points-ticker" id="points-ticker">
+          <div class="points-digit" id="digit-hundreds">0</div>
+          <div class="points-digit" id="digit-tens">0</div>
+          <div class="points-digit" id="digit-ones">0</div>
         </div>
       </div>
 
@@ -46,6 +37,11 @@
 
     <!-- Task List -->
     <div class="task-list" id="task-list"></div>
+
+    <!-- Cash Out Footer -->
+    <div class="cashout-container">
+      <button class="btn-cashout" id="btn-cashout" onclick="window.zenify.cashOut()" title="Cash out and reset points">CASH OUT</button>
+    </div>
   </div>
 
   <!-- FAB -->

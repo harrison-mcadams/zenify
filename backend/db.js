@@ -198,6 +198,10 @@ function seedIfEmpty() {
   console.log('Seeded default tasks.');
 }
 
+function resetPoints() {
+  run('DELETE FROM points_log');
+}
+
 module.exports = {
   initDb,
   getAllTasks,
@@ -208,6 +212,7 @@ module.exports = {
   completeTask,
   uncompleteTask,
   getPoints,
+  resetPoints,
   resetDueRecurringTasks,
   seedIfEmpty,
 };

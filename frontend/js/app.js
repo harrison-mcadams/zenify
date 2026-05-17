@@ -7,14 +7,15 @@ let state = {
   activeCategory: 'all',
   editingTaskId: null,
   connected: false,
+  showCompleted: false,
 };
 
 // ========== DOM Refs ==========
 const $ = (sel) => document.querySelector(sel);
 const taskListEl = $('#task-list');
-const totalPointsEl = $('#total-points');
-const wellnessPointsEl = $('#wellness-points');
-const choresPointsEl = $('#chores-points');
+const digitHundredsEl = $('#digit-hundreds');
+const digitTensEl = $('#digit-tens');
+const digitOnesEl = $('#digit-ones');
 const modalOverlay = $('#modal-overlay');
 const modalTitle = $('#modal-title');
 const taskForm = $('#task-form');
@@ -55,21 +56,21 @@ async function refresh() {
   }
 }
 
+function updateDigit(el, value) {
+  if (!el) return;
+  if (el.textContent === value) return;
+  el.textContent = value;
+  el.classList.remove('flip-active');
+  void el.offsetWidth; // reflow
+  el.classList.add('flip-active');
+}
+
 // ========== Rendering ==========
 function renderPoints() {
-  const prev = parseInt(totalPointsEl.textContent) || 0;
-  totalPointsEl.textContent = state.points.total;
-
-  if (state.points.total > prev) {
-    totalPointsEl.classList.remove('bump');
-    void totalPointsEl.offsetWidth; // reflow
-    totalPointsEl.classList.add('bump');
-  }
-
-  const wellnessTotal = state.points.byCategory.find(c => c.category === 'wellness')?.total || 0;
-  const choresToal = state.points.byCategory.find(c => c.category === 'chores')?.total || 0;
-  wellnessPointsEl.textContent = wellnessTotal;
-  choresPointsEl.textContent = choresToal;
+  const totalStr = String(state.points.total || 0).padStart(3, '0');
+  updateDigit(digitHundredsEl, totalStr[0]);
+  updateDigit(digitTensEl, totalStr[1]);
+  updateDigit(digitOnesEl, totalStr[2]);
 }
 
 function renderTasks() {
@@ -97,8 +98,14 @@ function renderTasks() {
   }
 
   if (completed.length > 0) {
-    html += `<div class="task-section-label">Completed</div>`;
-    html += completed.map(renderTaskCard).join('');
+    html += `
+      <div class="task-section-header">
+        <span class="task-section-label">Completed</span>
+        <button class="btn-toggle-completed" onclick="window.zenify.toggleShowCompleted()">${state.showCompleted ? 'HIDE' : 'SHOW'}</button>
+      </div>`;
+    if (state.showCompleted) {
+      html += completed.map(renderTaskCard).join('');
+    }
   }
 
   taskListEl.innerHTML = html;
@@ -318,6 +325,24 @@ function showPointsFly(card, points) {
   setTimeout(() => fly.remove(), 900);
 }
 
+async function cashOut() {
+  if (!confirm("Are you sure you want to cash out and reset your points counter?")) return;
+  try {
+    await api.resetPoints();
+    state.points = await api.getPoints();
+    renderPoints();
+    showToast("Cashed out! Points reset. 💸");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to reset points");
+  }
+}
+
+function toggleShowCompleted() {
+  state.showCompleted = !state.showCompleted;
+  renderTasks();
+}
+
 // ========== Event Listeners ==========
 function setupEventListeners() {
   // FAB
@@ -349,7 +374,7 @@ function setupEventListeners() {
 }
 
 // Expose actions to inline handlers
-window.zenify = { toggleComplete, removeTask, editTask };
+window.zenify = { toggleComplete, removeTask, editTask, cashOut, toggleShowCompleted };
 
 // Go
 init();

@@ -47,3 +47,7 @@ export function uncompleteTask(id) {
 export function getPoints() {
   return request('/api/points');
 }
+
+export function resetPoints() {
+  return request('/api/points/reset', { method: 'POST' });
+}
