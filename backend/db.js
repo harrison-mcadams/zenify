@@ -133,6 +133,7 @@ function completeTask(id) {
 
 function uncompleteTask(id) {
   run('UPDATE tasks SET completed = 0, completed_at = NULL WHERE id = ?', [id]);
+  run('DELETE FROM points_log WHERE id = (SELECT id FROM points_log WHERE task_id = ? ORDER BY earned_at DESC LIMIT 1)', [id]);
   return getTaskById(id);
 }
 

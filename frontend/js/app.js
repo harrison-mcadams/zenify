@@ -118,6 +118,10 @@ function renderTaskCard(task) {
     metaHtml = `<span>One-off</span>`;
   }
 
+  const actionBtn = isCompleted
+    ? `<button class="task-card__action-btn task-card__action-btn--restore" onclick="window.zenify.toggleComplete('${task.id}')" title="Restore/Undo task">↺</button>`
+    : `<button class="task-card__action-btn" onclick="window.zenify.editTask('${task.id}')" title="Edit">✏️</button>`;
+
   return `
     <div class="task-card ${catClass} ${completedClass}" data-id="${task.id}">
       <button class="task-card__check" onclick="window.zenify.toggleComplete('${task.id}')" title="${isCompleted ? 'Undo' : 'Complete'}">
@@ -129,7 +133,7 @@ function renderTaskCard(task) {
       </div>
       <div class="task-card__points">+${task.points}</div>
       <div class="task-card__actions">
-        <button class="task-card__action-btn" onclick="window.zenify.editTask('${task.id}')" title="Edit">✏️</button>
+        ${actionBtn}
         <button class="task-card__action-btn task-card__action-btn--delete" onclick="window.zenify.removeTask('${task.id}')" title="Delete">🗑️</button>
       </div>
     </div>`;
@@ -150,6 +154,7 @@ async function toggleComplete(id) {
   try {
     if (task.completed) {
       await api.uncompleteTask(id);
+      showToast(`Task restored! Points deducted. ↺`);
     } else {
       // Animate
       if (card) {

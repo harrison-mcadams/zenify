@@ -1,25 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg: #F5F3EE;
+  --bg: #F8FAFC;
   --bg-card: #FFFFFF;
-  --bg-modal: rgba(0,0,0,0.45);
-  --text-primary: #1A1A2E;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --wellness: #2EC4B6;
-  --wellness-light: #D4F5F2;
-  --wellness-dark: #1B9E92;
-  --chores: #FF9F1C;
-  --chores-light: #FFF0D4;
-  --chores-dark: #E08600;
-  --accent: #E71D36;
-  --accent-light: #FDDDE2;
+  --bg-modal: rgba(15,23,42,0.5);
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --wellness: #0284C7;
+  --wellness-light: #E0F2FE;
+  --wellness-dark: #0369A1;
+  --chores: #EA580C;
+  --chores-light: #FFEDD5;
+  --chores-dark: #C2410C;
+  --accent: #E11D48;
+  --accent-light: #FFE4E6;
   --success: #10B981;
   --danger: #EF4444;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06);
+  --shadow-md: 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-lg: 0 16px 48px rgba(15,23,42,0.12);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -41,14 +41,7 @@ body {
 .app { max-width: 640px; margin: 0 auto; padding: 0 16px 100px; }
 
 /* Header */
-.header { padding: 24px 0 16px; text-align: center; }
-.header__brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
-.header__logo { font-size: 28px; }
-.header__title {
-  font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--wellness), var(--chores));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
+.header { padding: 16px 0 12px; text-align: center; }
 
 /* Points */
 .points-display {
@@ -60,7 +53,7 @@ body {
 .points-total__value { font-size: 36px; font-weight: 800; color: var(--accent); line-height: 1.1; }
 .points-total__value.bump { animation: pointsBump 400ms ease; }
 @keyframes pointsBump { 0%{transform:scale(1)} 40%{transform:scale(1.25)} 100%{transform:scale(1)} }
-.points-divider { width: 1px; height: 40px; background: #E5E7EB; }
+.points-divider { width: 1px; height: 40px; background: #E2E8F0; }
 .points-category { text-align: center; }
 .points-category__value { font-size: 20px; font-weight: 700; line-height: 1.2; }
 .points-category__value--wellness { color: var(--wellness-dark); }
@@ -68,7 +61,7 @@ body {
 .points-category__label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
 
 /* Tabs */
-.tabs { display: flex; gap: 8px; margin: 20px 0 16px; }
+.tabs { display: flex; gap: 8px; margin: 16px 0 16px; }
 .tab {
   flex: 1; padding: 10px 16px; border: none; border-radius: var(--radius-md);
   font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -125,8 +118,9 @@ body {
   display: flex; align-items: center; justify-content: center;
   transition: background var(--transition); color: var(--text-muted);
 }
-.task-card__action-btn:hover { background: #F3F4F6; }
+.task-card__action-btn:hover { background: #E2E8F0; }
 .task-card__action-btn--delete:hover { background: var(--accent-light); color: var(--danger); }
+.task-card__action-btn--restore:hover { background: var(--wellness-light); color: var(--wellness-dark); }
 
 @keyframes completePulse { 0%{box-shadow:var(--shadow-sm)} 50%{box-shadow:0 0 0 4px rgba(16,185,129,0.2)} 100%{box-shadow:var(--shadow-sm)} }
 .task-card--completing { animation: completePulse 500ms ease; }
