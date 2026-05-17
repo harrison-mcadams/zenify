@@ -56,21 +56,57 @@ async function refresh() {
   }
 }
 
-function updateDigit(el, value) {
+// Solari split-flap: cycle through each intermediate digit one at a time
+const activeRollers = new Map(); // track in-flight animations per element
+
+function rollDigit(el, targetValue) {
   if (!el) return;
-  if (el.textContent === value) return;
-  el.textContent = value;
-  el.classList.remove('flip-active');
-  void el.offsetWidth; // reflow
-  el.classList.add('flip-active');
+  const target = parseInt(targetValue);
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) return;
+
+  // Cancel any in-flight roller on this element
+  if (activeRollers.has(el)) {
+    clearInterval(activeRollers.get(el));
+    activeRollers.delete(el);
+  }
+
+  // Build the sequence of digits to flip through
+  // A real Solari board always advances forward (0→1→2→...→9→0→1→...)
+  const steps = [];
+  let d = current;
+  do {
+    d = (d + 1) % 10;
+    steps.push(d);
+  } while (d !== target);
+
+  let i = 0;
+  const FLIP_INTERVAL = 80; // ms per flap — fast but visible
+
+  const intervalId = setInterval(() => {
+    // Trigger the CSS flip animation
+    el.classList.remove('flip-active');
+    void el.offsetWidth; // reflow to restart animation
+
+    el.textContent = steps[i];
+    el.classList.add('flip-active');
+
+    i++;
+    if (i >= steps.length) {
+      clearInterval(intervalId);
+      activeRollers.delete(el);
+    }
+  }, FLIP_INTERVAL);
+
+  activeRollers.set(el, intervalId);
 }
 
 // ========== Rendering ==========
 function renderPoints() {
   const totalStr = String(state.points.total || 0).padStart(3, '0');
-  updateDigit(digitHundredsEl, totalStr[0]);
-  updateDigit(digitTensEl, totalStr[1]);
-  updateDigit(digitOnesEl, totalStr[2]);
+  rollDigit(digitHundredsEl, totalStr[0]);
+  rollDigit(digitTensEl, totalStr[1]);
+  rollDigit(digitOnesEl, totalStr[2]);
 }
 
 function renderTasks() {

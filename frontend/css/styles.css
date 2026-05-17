@@ -65,11 +65,11 @@ body {
   transform-style: preserve-3d;
 }
 .points-digit.flip-active {
-  animation: digitFlip 250ms ease-out;
+  animation: digitFlip 70ms ease-in;
 }
 @keyframes digitFlip {
   0% { transform: rotateX(0deg); }
-  50% { transform: rotateX(30deg); }
+  50% { transform: rotateX(-90deg); }
   100% { transform: rotateX(0deg); }
 }
 
