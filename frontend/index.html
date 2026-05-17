@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Zenify - A gamified to-do list that rewards your productivity with points.">
+  <title>Zenify — Gamified To-Do</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo">✨</span>
+        <h1 class="header__title">Zenify</h1>
+      </div>
+
+      <div class="points-display" id="points-display">
+        <div class="points-total">
+          <div class="points-total__label">Total Points</div>
+          <div class="points-total__value" id="total-points">0</div>
+        </div>
+        <div class="points-divider"></div>
+        <div class="points-category">
+          <div class="points-category__value points-category__value--wellness" id="wellness-points">0</div>
+          <div class="points-category__label">Wellness</div>
+        </div>
+        <div class="points-divider"></div>
+        <div class="points-category">
+          <div class="points-category__value points-category__value--chores" id="chores-points">0</div>
+          <div class="points-category__label">Chores</div>
+        </div>
+      </div>
+
+      <div class="connection-status" id="connection-status">
+        <span class="connection-dot" id="connection-dot"></span>
+        <span id="connection-text">Connected</span>
+      </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <div class="tabs" id="tabs">
+      <button class="tab tab--active" data-category="all" id="tab-all">All</button>
+      <button class="tab" data-category="wellness" id="tab-wellness">🧘 Wellness</button>
+      <button class="tab" data-category="chores" id="tab-chores">🧹 Chores</button>
+    </div>
+
+    <!-- Task List -->
+    <div class="task-list" id="task-list"></div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-add" title="Add new task">+</button>
+
+  <!-- Add/Edit Task Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-title">New Task</h2>
+        <button class="modal__close" id="modal-close">×</button>
+      </div>
+      <form id="task-form">
+        <div class="form-group">
+          <label class="form-label" for="task-title-input">Task Name</label>
+          <input class="form-input" type="text" id="task-title-input" placeholder="What needs doing?" required autocomplete="off">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <div class="toggle-group" id="category-toggle">
+              <button type="button" class="toggle-btn toggle-btn--active" data-value="wellness">🧘 Wellness</button>
+              <button type="button" class="toggle-btn" data-value="chores">🧹 Chores</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="task-points-input">Points</label>
+            <input class="form-input" type="number" id="task-points-input" min="1" max="100" value="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div class="toggle-group" id="type-toggle">
+            <button type="button" class="toggle-btn toggle-btn--active" data-value="one-off">One-off</button>
+            <button type="button" class="toggle-btn" data-value="recurring">Recurring</button>
+          </div>
+        </div>
+
+        <div class="form-group" id="recurrence-group" style="display:none">
+          <label class="form-label" for="recurrence-select">Repeats</label>
+          <select class="form-select" id="recurrence-select">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="on-completion">On Completion</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-submit">Add Task</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
