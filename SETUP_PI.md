@@ -157,14 +157,43 @@ You should see Zenify with your seeded tasks. Complete a task on one device, ref
 
 ## Updating
 
-When you make changes on your PC:
+When you make changes on your PC, you can update the Pi using either **Git** (recommended) or **rsync**.
 
-```bash
-# From your PC:
-rsync -avz --exclude node_modules --exclude '*.db' . <pi>:~/zenify/
+### Option A: Using Git (Recommended)
 
-# Then on the Pi:
-sudo systemctl restart zenify
-```
+Since the active task database (`*.db`) and `node_modules` are ignored in `.gitignore`, you can safely use Git to update the code without touching your task history.
 
-The `--exclude '*.db'` flag preserves your task data on the Pi.
+1. **On your PC**: Commit and push your changes to GitHub:
+   ```bash
+   git add .
+   git commit -m "Your update message"
+   git push origin main
+   ```
+
+2. **On the Pi**: Pull the updates:
+   ```bash
+   cd ~/zenify
+   git pull
+   ```
+
+3. **On the Pi**: Restart the Zenify service to apply the updates:
+   ```bash
+   sudo systemctl restart zenify
+   ```
+
+---
+
+### Option B: Using rsync
+
+If you haven't pushed the repository to GitHub or just want to sync local files directly:
+
+1. **From your PC** (in the `zenify` directory):
+   ```bash
+   rsync -avz --exclude node_modules --exclude '*.db' --exclude '.git' . puck-server:~/zenify/
+   ```
+
+2. **On the Pi**: Restart the service:
+   ```bash
+   sudo systemctl restart zenify
+   ```
+

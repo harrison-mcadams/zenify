@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# SQLite databases (preserves your active task list!)
+*.db
+*.db-journal
+*.db-wal
+
+# OS files
+.DS_Store
+Thumbs.db
